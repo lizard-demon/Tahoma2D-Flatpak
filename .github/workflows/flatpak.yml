@@ -1,0 +1,23 @@
+name: Remote Flatpak Build
+on: [push, workflow_dispatch]
+
+jobs:
+  flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-5.15-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Tahoma2D
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: Tahoma2D-v1.6-Stable.flatpak
+          manifest-path: io.github.tahoma2d.Tahoma2D.yaml
+          cache: true
+          cache-key: flatpak-builder-${{ github.sha }}
+      - name: Upload Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tahoma2D-Build
+          path: Tahoma2D-v1.6-Stable.flatpak

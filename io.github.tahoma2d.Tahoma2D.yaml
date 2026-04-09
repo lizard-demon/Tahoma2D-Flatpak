@@ -1,0 +1,60 @@
+app-id: io.github.tahoma2d.Tahoma2D
+runtime: org.kde.Platform
+runtime-version: '5.15-25.08'
+sdk: org.kde.Sdk
+command: Tahoma2D
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --share=network
+  - --filesystem=home
+
+modules:
+  - name: intltool
+    cleanup:
+      - '*'
+    sources:
+      - type: archive
+        url: https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz
+        sha256: 67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd
+
+  - name: json-c
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: git
+        url: https://github.com/json-c/json-c.git
+        tag: json-c-0.14-20200419
+
+  - name: libmypaint
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://github.com/mypaint/libmypaint/releases/download/v1.6.1/libmypaint-1.6.1.tar.xz
+        sha256: 741754f293f6b7668f941506da07cd7725629a793108bb31633fb6c3eae5315f
+
+  - name: opencv
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DBUILD_LIST=core,imgproc,video,features2d,flann,calib3d,objdetect,videoio,highgui,imgcodecs
+      - -DBUILD_EXAMPLES=OFF
+      - -DBUILD_TESTS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/opencv/opencv/archive/4.13.0.tar.gz
+        sha256: 1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d
+
+  - name: tahoma2d
+    buildsystem: cmake-ninja
+    subdir: toonz/sources
+    config-opts:
+      - -DQT_VERSION_MAJOR=5
+      - -DWITH_SYSTEM_LZO=ON
+    sources:
+      - type: git
+        url: https://github.com/tahoma2d/tahoma2d.git
+        branch: master
