@@ -5,11 +5,13 @@ sdk: org.kde.Sdk
 command: Tahoma2D
 finish-args:
   - --share=ipc
-  - --socket=fallback-x11
+  - --socket=x11
   - --socket=wayland
   - --device=dri
+  - --socket=pulseaudio
   - --share=network
   - --filesystem=home
+  - --env=QT_QPA_PLATFORM=xcb
 
 modules:
   - name: intltool
@@ -149,7 +151,26 @@ modules:
       - cd toonz/build && cmake -G Ninja -DCMAKE_INSTALL_PREFIX=/app -DCMAKE_BUILD_TYPE=Release -DQT_VERSION_MAJOR=5 -DWITH_SYSTEM_LZO=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DTIFF_LIBRARY=${FLATPAK_BUILDER_BUILDDIR}/thirdparty/tiff-4.2.0/libtiff/.libs/libtiff.a -DDEFLATE_LIB=/app/lib/libdeflate.so -DGLUT_LIB=/app/lib/libglut.so -DGLU_LIB=/app/lib/libGLU.so -DCMAKE_CXX_STANDARD_LIBRARIES="-lwebp -lopenblas" ../sources
       - cd toonz/build && ninja -j $FLATPAK_BUILDER_N_JOBS
       - cd toonz/build && ninja install
+      - mv /app/bin/Tahoma2D /app/bin/Tahoma2D.bin
     sources:
       - type: git
         url: https://github.com/tahoma2d/tahoma2d.git
         branch: master
+
+  - name: tahoma2d-wrapper
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 Tahoma2D.sh /app/bin/Tahoma2D
+    sources:
+      - type: script
+        dest-filename: Tahoma2D.sh
+        commands:
+          - unset SESSION_MANAGER
+          - STUFF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Tahoma2D/tahoma2dstuff"
+          - if [ ! -d "$STUFF_DIR" ]; then
+          - '  mkdir -p "${STUFF_DIR%/*}"'
+          - '  cp -r /app/share/tahoma2d/stuff "$STUFF_DIR"'
+          - '  chmod -R u+w "$STUFF_DIR"'
+          - fi
+          - export LD_LIBRARY_PATH="/app/lib/tahoma2d:/app/lib:${LD_LIBRARY_PATH}"
+          - exec /app/bin/Tahoma2D.bin -TAHOMA2DROOT "$STUFF_DIR" "$@"
