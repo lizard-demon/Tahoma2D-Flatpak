@@ -20,6 +20,13 @@ modules:
         url: https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz
         sha256: 67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd
 
+  - name: lzo
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz
+        sha256: c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072
+
   - name: json-c
     buildsystem: cmake-ninja
     config-opts:
@@ -48,13 +55,100 @@ modules:
         url: https://github.com/opencv/opencv/archive/4.13.0.tar.gz
         sha256: 1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d
 
-  - name: tahoma2d
+  - name: glew
     buildsystem: cmake-ninja
-    subdir: toonz/sources
+    builddir: true
+    subdir: build/cmake
     config-opts:
-      - -DQT_VERSION_MAJOR=5
-      - -DWITH_SYSTEM_LZO=ON
+      - -DBUILD_UTILS=OFF
       - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0.tgz
+        sha256: d4fc82893cfb00109578d0a1a2337fb8ca335b3ceccf97b97e5cc7f08e4353e1
+
+  - name: libwebp
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+    sources:
+      - type: git
+        url: https://github.com/webmproject/libwebp.git
+        tag: v1.4.0
+
+  - name: openblas
+    buildsystem: cmake-ninja
+    build-options:
+      cflags: "-Wno-incompatible-pointer-types -Wno-implicit-function-declaration -Wno-implicit-int"
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DNOFORTRAN=1
+      - -DBUILD_WITHOUT_LAPACK=1
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DCMAKE_C_STANDARD=99
+      - -DBUILD_TESTING=OFF
+    sources:
+      - type: git
+        url: https://github.com/OpenMathLib/OpenBLAS.git
+        tag: v0.3.27
+
+  - name: superlu
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -Denable_tests=OFF
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DCMAKE_C_STANDARD=99
+    sources:
+      - type: git
+        url: https://github.com/xiaoyeli/superlu.git
+        tag: v5.3.0
+
+  - name: boost
+    buildsystem: simple
+    build-commands:
+      - ./bootstrap.sh --prefix=/app
+      - ./b2 -j $FLATPAK_BUILDER_N_JOBS install variant=release link=shared threading=multi -d0
+    sources:
+      - type: archive
+        url: https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.bz2
+        sha256: cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454
+
+  - name: glu
+    buildsystem: meson
+    sources:
+      - type: git
+        url: https://gitlab.freedesktop.org/mesa/glu.git
+        tag: glu-9.0.3
+
+  - name: freeglut
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DFREEGLUT_BUILD_STATIC_LIBS=OFF
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DCMAKE_C_STANDARD=99
+    sources:
+      - type: git
+        url: https://github.com/FreeGLUTProject/freeglut.git
+        tag: v3.4.0
+
+  - name: libdeflate
+    buildsystem: cmake-ninja
+    sources:
+      - type: git
+        url: https://github.com/ebiggers/libdeflate.git
+        tag: v1.20
+
+  - name: tahoma2d
+    buildsystem: simple
+    build-commands:
+      - cd thirdparty/tiff-4.2.0 && ./configure --with-pic --disable-jbig --disable-shared
+      - cd thirdparty/tiff-4.2.0 && make -j $FLATPAK_BUILDER_N_JOBS
+      - mkdir -p toonz/build
+      - cd toonz/build && cmake -G Ninja -DCMAKE_INSTALL_PREFIX=/app -DCMAKE_BUILD_TYPE=Release -DQT_VERSION_MAJOR=5 -DWITH_SYSTEM_LZO=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DTIFF_LIBRARY=${FLATPAK_BUILDER_BUILDDIR}/thirdparty/tiff-4.2.0/libtiff/.libs/libtiff.a -DDEFLATE_LIB=/app/lib/libdeflate.so -DGLUT_LIB=/app/lib/libglut.so -DGLU_LIB=/app/lib/libGLU.so -DCMAKE_CXX_STANDARD_LIBRARIES="-lwebp -lopenblas" ../sources
+      - cd toonz/build && ninja -j $FLATPAK_BUILDER_N_JOBS
+      - cd toonz/build && ninja install
     sources:
       - type: git
         url: https://github.com/tahoma2d/tahoma2d.git
