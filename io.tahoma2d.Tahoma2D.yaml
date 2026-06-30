@@ -1,14 +1,25 @@
-app-id: io.github.tahoma2d.Tahoma2D
+app-id: org.tahoma2d.Tahoma2D
 runtime: org.kde.Platform
 runtime-version: '5.15-25.08'
 sdk: org.kde.Sdk
 command: Tahoma2D
+appstream-compose: false
+
+# Strips out development files to keep the final app size minimal
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/man
+  - /share/doc
+  - "*.la"
+  - "*.a"
+
 finish-args:
   - --share=ipc
   - --socket=x11
   - --socket=wayland
-  - --device=dri
   - --socket=pulseaudio
+  - --device=dri
   - --share=network
   - --filesystem=home
   - --env=QT_QPA_PLATFORM=xcb
@@ -155,7 +166,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/tahoma2d/tahoma2d.git
-        branch: master
+        tag: v1.6.1
 
   - name: tahoma2d-wrapper
     buildsystem: simple
@@ -174,3 +185,26 @@ modules:
           - fi
           - export LD_LIBRARY_PATH="/app/lib/tahoma2d:/app/lib:${LD_LIBRARY_PATH}"
           - exec /app/bin/Tahoma2D.bin -TAHOMA2DROOT "$STUFF_DIR" "$@"
+
+  - name: desktop-integration
+    buildsystem: simple
+    build-commands:
+      - |
+        cat <<'EOF' > org.tahoma2d.Tahoma2D.desktop
+        [Desktop Entry]
+        Name=Tahoma2D
+        GenericName=2D Animation Software
+        Comment=Open-source 2D animation and stop motion software
+        Exec=Tahoma2D %f
+        Icon=org.tahoma2d.Tahoma2D
+        Terminal=false
+        Type=Application
+        Categories=Graphics;2DGraphics;RasterGraphics;
+        MimeType=application/x-tahoma2d;
+        EOF
+      - install -Dm644 org.tahoma2d.Tahoma2D.desktop /app/share/applications/org.tahoma2d.Tahoma2D.desktop
+      - install -Dm644 icon.png /app/share/icons/hicolor/256x256/apps/org.tahoma2d.Tahoma2D.png
+    sources:
+      - type: file
+        path: icon.png
+
