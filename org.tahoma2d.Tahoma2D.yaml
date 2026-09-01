@@ -166,7 +166,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/tahoma2d/tahoma2d.git
-        tag: v1.6.1
+        tag: v1.6.3
 
   - name: tahoma2d-wrapper
     buildsystem: simple
