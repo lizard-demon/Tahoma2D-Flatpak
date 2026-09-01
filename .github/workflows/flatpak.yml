@@ -9,15 +9,23 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v4
+      
       - name: Build Tahoma2D
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: Tahoma2D-v1.6-Stable.flatpak
+          bundle: Tahoma2D.flatpak
           manifest-path: org.tahoma2d.Tahoma2D.yaml
           cache: true
           cache-key: flatpak-builder-${{ github.sha }}
+          
       - name: Upload Bundle
         uses: actions/upload-artifact@v4
         with:
           name: Tahoma2D-Build
-          path: Tahoma2D-v1.6-Stable.flatpak
+          path: Tahoma2D.flatpak
+          
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Tahoma2D.flatpak
